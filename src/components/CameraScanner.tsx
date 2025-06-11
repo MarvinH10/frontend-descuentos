@@ -1,14 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import QrScanner from 'react-qr-scanner';
-import {
-  Camera,
-  Search,
-  CheckCircle,
-  RefreshCw,
-  XCircle,
-  BarChart2,
-  Lightbulb
-} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import { Camera, CameraOff } from 'lucide-react';
 
 interface CameraScannerProps {
   onScanSuccess: (decodedText: string) => void;
@@ -23,161 +15,139 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   isActive,
   onToggle
 }) => {
-  const [cameraReady, setCameraReady] = useState(false);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [isScanning, setIsScanning] = useState(true);
-  const [lastScan, setLastScan] = useState('');
-  const [scanCount, setScanCount] = useState(0);
-
-  const lastRef = useRef<string>('');
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        stream.getTracks().forEach(t => t.stop());
-        setCameraReady(true);
-      })
-      .catch(() => {
-        onScanError?.('Permiso denegado. Revisa la configuración de tu navegador.');
-      });
-  }, [onScanError]);
+    const startScanner = async () => {
+      if (scannerRef.current) return;
 
-  const handleScan = useCallback((data: string | null) => {
-    if (!isScanning) return;
-    if (data && data !== lastRef.current) {
-      lastRef.current = data;
-      setLastScan(data);
-      setIsScanning(false);
-      setScanCount(c => c + 1);
-      onScanSuccess(data);
-      setTimeout(() => {
-        lastRef.current = '';
-        setIsScanning(true);
-      }, 2000);
+      setIsInitializing(true);
+      setError(null);
+
+      try {
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          disableFlip: false,
+          facingMode: "environment",
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          showTorchButtonIfSupported: true,
+          showZoomSliderIfSupported: false
+        };
+
+        scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
+
+        scannerRef.current.render(
+          (decodedText: string) => {
+            onScanSuccess(decodedText);
+            setError(null);
+          },
+          (errorMessage: string) => {
+            if (
+              !errorMessage.includes("No QR code found") &&
+              !errorMessage.includes("QR code parse error") &&
+              !errorMessage.includes("NotFoundException")
+            ) {
+              console.warn("⚠️ Error de escaneo:", errorMessage);
+            }
+          }
+        );
+
+        setIsInitializing(false);
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Error desconocido al iniciar la cámara";
+        console.error("❌ Error al iniciar escáner:", err);
+        setError(`Error al acceder a la cámara: ${errorMsg}`);
+        setIsInitializing(false);
+
+        if (onScanError) {
+          onScanError(errorMsg);
+        }
+      }
+    };
+
+    const stopScanner = () => {
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.clear();
+          scannerRef.current = null;
+          setError(null);
+        } catch (err) {
+          console.warn("⚠️ Error al detener el escáner:", err);
+        }
+      }
+      setIsInitializing(false);
+    };
+
+    if (isActive) {
+      startScanner();
+    } else {
+      stopScanner();
     }
-  }, [isScanning, onScanSuccess]);
 
-  const handleError = useCallback((err: Error) => {
-    console.error(err);
-    onScanError?.(err.message);
-  }, [onScanError]);
-
-  const toggleCamera = () => {
-    setFacingMode(fm => fm === 'user' ? 'environment' : 'user');
-  };
-
-  const resetScanner = () => {
-    lastRef.current = '';
-    setIsScanning(true);
-    setLastScan('');
-  };
-
-  if (!isActive) {
-    return (
-      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-        <button
-          onClick={onToggle}
-          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
-        >
-          <Camera className="w-5 h-5 mr-2" />
-          Activar Escáner QR
-        </button>
-        <p className="text-gray-500 text-sm mt-3 max-w-sm mx-auto">
-          Presiona para activar la cámara y comenzar a escanear códigos
-        </p>
-      </div>
-    );
-  }
-
-  if (isActive && !cameraReady) {
-    return (
-      <div className="p-4 text-center text-gray-600">
-        🔒 Esperando permiso de cámara…
-      </div>
-    );
-  }
+    return () => {
+      stopScanner();
+    };
+  }, [isActive, onScanSuccess, onScanError]);
 
   return (
     <div className="space-y-4">
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold text-gray-900">Escáner QR Activo</h3>
-          <p className="text-sm text-gray-600 flex items-center gap-1">
-            {isScanning ? (
-              <>
-                <Search className="w-4 h-4" />
-                Buscando código...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                Código detectado
-              </>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={toggleCamera} title="Cambiar cámara" className="px-3 py-2 bg-gray-100 rounded-md">
-            <RefreshCw className="w-5 h-5" />
-          </button>
-          <button onClick={onToggle} className="px-4 py-2 bg-red-600 text-white rounded-md">
-            <XCircle className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
+      <button
+        onClick={onToggle}
+        disabled={isInitializing}
+        className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isActive
+          ? 'bg-red-600 hover:bg-red-700 text-white'
+          : 'bg-green-600 hover:bg-green-700 text-white'
+          }`}
+      >
+        {isInitializing ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            Iniciando cámara...
+          </>
+        ) : isActive ? (
+          <>
+            <CameraOff className="w-4 h-4" />
+            Cerrar Cámara
+          </>
+        ) : (
+          <>
+            <Camera className="w-4 h-4" />
+            Abrir Cámara
+          </>
+        )}
+      </button>
 
-      {scanCount > 0 && (
-        <div className="text-xs text-gray-500 bg-gray-50 rounded px-2 py-1 inline-flex items-center gap-1">
-          <BarChart2 className="w-4 h-4" />
-          Escaneos: {scanCount}
+      {error && (
+        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <p className="font-medium">Error de cámara:</p>
+          <p className="text-sm">{error}</p>
+          <p className="text-xs mt-1">💡 Asegúrate de:</p>
+          <ul className="text-xs mt-1 list-disc list-inside">
+            <li>Permitir acceso a la cámara en el navegador</li>
+            <li>Usar HTTPS (o localhost para desarrollo)</li>
+            <li>Que tu dispositivo tenga cámara disponible</li>
+          </ul>
         </div>
       )}
 
-      <div className="aspect-square max-w-lg mx-auto relative overflow-hidden rounded-lg shadow-sm border border-gray-200">
-        <QrScanner
-          delay={300}
-          facingMode={facingMode}
-          onError={handleError}
-          onScan={handleScan}
-          style={{ width: '100%', height: '100%' }}
-          constraints={{ facingMode: { ideal: facingMode } }}
-        />
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-1/4 border-2 border-white rounded-lg shadow-lg">
-            {isScanning && (
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-green-400 animate-pulse" />
-            )}
-          </div>
-        </div>
-      </div>
-
-      {lastScan && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start justify-between">
-          <div>
-            <h4 className="font-medium text-green-800">Último código:</h4>
-            <p className="font-mono break-all">{lastScan}</p>
-          </div>
-          <button onClick={resetScanner} className="px-3 py-1 bg-green-600 text-white rounded flex items-center gap-1">
-            <RefreshCw className="w-4 h-4" />
-            Nuevo
-          </button>
+      {isActive && !error && (
+        <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
+          <div id="qr-reader" className="w-full"></div>
         </div>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start">
-          <Lightbulb className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Consejos para un mejor escaneo:</p>
-            <ul className="text-xs space-y-1 text-blue-700 list-disc list-inside">
-              <li>Mantén el código dentro del marco blanco</li>
-              <li>Asegúrate de tener buena iluminación</li>
-              <li>Mantén la cámara estable</li>
-              <li>Si no funciona, prueba cambiar de cámara con el botón de recarga</li>
-            </ul>
-          </div>
+      {isActive && !error && (
+        <div className="text-sm text-gray-600 text-center space-y-1">
+          <p>📱 <strong>Apunta la cámara hacia el código</strong></p>
+          <p>🔍 El escaneo es automático</p>
+          <p>📋 Soporta QR y códigos de barras</p>
         </div>
-      </div>
+      )}
     </div>
   );
 };
