@@ -146,7 +146,9 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       <div className="aspect-square max-w-lg mx-auto relative overflow-hidden rounded-lg shadow-sm border border-gray-200">
         <QrReader
           onResult={handleResult}
-          constraints={{ facingMode }}
+          constraints={{
+            facingMode: { ideal: facingMode }
+          }}
           containerStyle={{ width: '100%', height: '100%' }}
           videoContainerStyle={{ width: '100%', height: '100%', paddingTop: 0 }}
           videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
