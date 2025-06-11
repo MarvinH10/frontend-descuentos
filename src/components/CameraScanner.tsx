@@ -28,15 +28,16 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   const [cameraReady, setCameraReady] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isScanning, setIsScanning] = useState(true);
-  const [lastScan, setLastScan] = useState<string>('');
+  const [lastScan, setLastScan] = useState('');
   const [scanCount, setScanCount] = useState(0);
-  const lastResultRef = useRef('');
+
+  const lastRef = useRef<string>('');
 
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true })
       .then(stream => {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(t => t.stop());
         setCameraReady(true);
       })
       .catch(err => {
@@ -45,41 +46,46 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       });
   }, [onScanError]);
 
-  const handleResult = useCallback((
-    result: QRReaderResult | null | undefined,
-    error?: Error | null
-  ) => {
-    if (error) {
-      const msg = error.message || 'Error desconocido del escáner';
-      if (!msg.includes('No QR code found')) {
-        onScanError?.(
-          msg.includes('Permission dismissed')
-            ? 'Permiso de cámara denegado por el usuario.'
-            : msg
-        );
+  const handleResult = useCallback(
+    (result: QRReaderResult | null | undefined, error?: Error | null) => {
+      if (error) {
+        const msg = error.message || 'Error desconocido del escáner';
+        if (!msg.includes('No QR code found')) {
+          onScanError?.(
+            msg.includes('Permission dismissed')
+              ? 'Permiso de cámara denegado por el usuario.'
+              : msg
+          );
+        }
+        return;
       }
-      return;
-    }
 
-    if (result && isScanning) {
-      const scannedText = result.getText();
-      if (scannedText && scannedText !== lastResultRef.current) {
-        console.log('Código QR escaneado:', scannedText);
-        setLastScan(scannedText);
+      if (result && isScanning) {
+        const text = result.getText();
+        if (text === lastRef.current) return;
+
+        lastRef.current = text;
+        console.log('Código QR escaneado:', text);
+        setLastScan(text);
         setIsScanning(false);
         setScanCount(c => c + 1);
-        onScanSuccess(scannedText);
-        setTimeout(() => setIsScanning(true), 2000);
-        lastResultRef.current = scannedText;
+        onScanSuccess(text);
+
+        setTimeout(() => {
+          lastRef.current = '';
+          setIsScanning(true);
+        }, 2000);
       }
-    }
-  }, [isScanning, onScanSuccess, onScanError]);
+    },
+    [isScanning, onScanSuccess, onScanError]
+  );
 
   const toggleCamera = () => {
     setFacingMode(fm => (fm === 'user' ? 'environment' : 'user'));
   };
 
   const resetScanner = () => {
+    lastRef.current = '';
     setIsScanning(true);
     setLastScan('');
   };
@@ -111,6 +117,7 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-gray-900">Escáner QR Activo</h3>
@@ -148,9 +155,7 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       <div className="aspect-square max-w-lg mx-auto relative overflow-hidden rounded-lg shadow-sm border border-gray-200">
         <QrReader
           onResult={handleResult}
-          constraints={{
-            facingMode: { ideal: facingMode }
-          }}
+          constraints={{ facingMode: { ideal: facingMode } }}
           containerStyle={{ width: '100%', height: '100%' }}
           videoContainerStyle={{ width: '100%', height: '100%', paddingTop: 0 }}
           videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
