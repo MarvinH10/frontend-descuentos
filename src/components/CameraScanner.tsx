@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { QrReader } from 'react-qr-reader';
 import {
   Camera,
@@ -25,10 +25,24 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   isActive,
   onToggle
 }) => {
+  const [cameraReady, setCameraReady] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isScanning, setIsScanning] = useState(true);
   const [lastScan, setLastScan] = useState<string>('');
   const [scanCount, setScanCount] = useState(0);
+
+  useEffect(() => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then(stream => {
+        stream.getTracks().forEach(track => track.stop());
+        setCameraReady(true);
+      })
+      .catch(err => {
+        console.error('Permiso cámara fallido:', err);
+        onScanError?.('Permiso denegado. Ve la configuración de tu navegador.');
+      });
+  }, [onScanError]);
 
   const handleResult = useCallback((
     result: QRReaderResult | null | undefined,
@@ -37,7 +51,11 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
     if (error) {
       const msg = error.message || 'Error desconocido del escáner';
       if (!msg.includes('No QR code found')) {
-        onScanError?.(msg);
+        onScanError?.(
+          msg.includes('Permission dismissed')
+            ? 'Permiso de cámara denegado por el usuario.'
+            : msg
+        );
       }
       return;
     }
@@ -56,7 +74,7 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   }, [isScanning, lastScan, onScanSuccess, onScanError]);
 
   const toggleCamera = () => {
-    setFacingMode(fm => fm === 'user' ? 'environment' : 'user');
+    setFacingMode(fm => (fm === 'user' ? 'environment' : 'user'));
   };
 
   const resetScanner = () => {
@@ -77,6 +95,14 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
         <p className="text-gray-500 text-sm mt-3 max-w-sm mx-auto">
           Presiona para activar la cámara y comenzar a escanear códigos
         </p>
+      </div>
+    );
+  }
+
+  if (isActive && !cameraReady) {
+    return (
+      <div className="p-4 text-center text-gray-600">
+        🔒 Esperando permiso de cámara…
       </div>
     );
   }
