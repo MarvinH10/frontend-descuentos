@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import CameraScanner from './CameraScanner';
 
+interface FormSubmitEvent extends React.FormEvent<HTMLFormElement> {
+  preventDefault: () => void;
+}
+
+interface FakeFormEvent {
+  preventDefault: () => void;
+}
+
 interface QRScannerProps {
   barcode: string;
   setBarcode: (value: string) => void;
@@ -10,17 +18,22 @@ interface QRScannerProps {
   loading: boolean;
   isOnline: boolean;
   history: string[];
-  onSearch: (e: React.FormEvent | { preventDefault: () => void }, scannedText?: string) => void;
+  onSearch: (e: FormSubmitEvent | FakeFormEvent, scannedText?: string) => void;
   onClearHistory: () => void;
   onRemoveFromHistory: (item: string) => void;
 }
 
-
-const SearchHistoryItem: React.FC<{
+interface SearchHistoryItemProps {
   item: string;
   onClick: () => void;
   onRemove: () => void;
-}> = ({ item, onClick, onRemove }) => {
+}
+
+const SearchHistoryItem: React.FC<SearchHistoryItemProps> = ({
+  item,
+  onClick,
+  onRemove
+}) => {
   return (
     <div className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full flex items-center gap-1">
       <span
@@ -63,12 +76,12 @@ const QRScanner: React.FC<QRScannerProps> = ({
     console.log('🔍 Código QR escaneado:', scannedText);
 
     setBarcode(scannedText);
-
     setIsCameraActive(false);
-
     setIsAutoSearching(true);
 
-    const fakeEvent = { preventDefault: () => { } } as React.FormEvent;
+    const fakeEvent: FakeFormEvent = {
+      preventDefault: () => { /* no-op */ }
+    };
 
     try {
       onSearch(fakeEvent, scannedText);
@@ -90,6 +103,19 @@ const QRScanner: React.FC<QRScannerProps> = ({
   const handleNewScan = () => {
     setBarcode('');
     setIsCameraActive(true);
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === "") {
+      setQuantity("");
+    } else {
+      setQuantity(Math.max(1, parseInt(val) || 1));
+    }
+  };
+
+  const handleQuantityBlur = () => {
+    if (quantity === "") setQuantity(1);
   };
 
   return (
@@ -134,7 +160,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
                   <p className="text-sm font-medium text-green-800">✅ Código QR escaneado:</p>
                   <p className="text-lg font-mono text-green-900 break-all">{barcode}</p>
                   {(isAutoSearching || loading) && (
-                    <p className="text-sm text-gray-600 mt-1 animate-pulse">
+                    <p className="text-sm text-gray-600 mt-1 animate-pulse flex items-center gap-1">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buscando producto
                     </p>
@@ -172,17 +198,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={e => {
-                  const val = e.target.value;
-                  if (val === "") {
-                    setQuantity("");
-                  } else {
-                    setQuantity(Math.max(1, parseInt(val) || 1));
-                  }
-                }}
-                onBlur={() => {
-                  if (quantity === "") setQuantity(1);
-                }}
+                onChange={handleQuantityChange}
+                onBlur={handleQuantityBlur}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 hover:border-gray-400 focus:border-gray-400 focus:ring-0 focus:ring-gray-400 focus:outline-none text-center"
                 disabled={isAutoSearching || loading}
               />
@@ -217,17 +234,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={e => {
-                  const val = e.target.value;
-                  if (val === "") {
-                    setQuantity("");
-                  } else {
-                    setQuantity(Math.max(1, parseInt(val) || 1));
-                  }
-                }}
-                onBlur={() => {
-                  if (quantity === "") setQuantity(1);
-                }}
+                onChange={handleQuantityChange}
+                onBlur={handleQuantityBlur}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 hover:border-gray-400 focus:border-gray-400 focus:ring-0 focus:ring-gray-400 focus:outline-none"
               />
             </div>
