@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { QrReader } from 'react-qr-reader';
+import QrScanner from 'react-qr-scanner';
 import {
   Camera,
   Search,
@@ -9,8 +9,6 @@ import {
   BarChart2,
   Lightbulb
 } from 'lucide-react';
-
-type QRReaderResult = { getText: () => string };
 
 interface CameraScannerProps {
   onScanSuccess: (decodedText: string) => void;
@@ -34,54 +32,38 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   const lastRef = useRef<string>('');
 
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         stream.getTracks().forEach(t => t.stop());
         setCameraReady(true);
       })
-      .catch(err => {
-        console.error('Permiso cámara fallido:', err);
-        onScanError?.('Permiso denegado. Ve la configuración de tu navegador.');
+      .catch(() => {
+        onScanError?.('Permiso denegado. Revisa la configuración de tu navegador.');
       });
   }, [onScanError]);
 
-  const handleResult = useCallback(
-    (result: QRReaderResult | null | undefined, error?: Error | null) => {
-      if (error) {
-        const msg = error.message || 'Error desconocido del escáner';
-        if (!msg.includes('No QR code found')) {
-          onScanError?.(
-            msg.includes('Permission dismissed')
-              ? 'Permiso de cámara denegado por el usuario.'
-              : msg
-          );
-        }
-        return;
-      }
+  const handleScan = useCallback((data: string | null) => {
+    if (!isScanning) return;
+    if (data && data !== lastRef.current) {
+      lastRef.current = data;
+      setLastScan(data);
+      setIsScanning(false);
+      setScanCount(c => c + 1);
+      onScanSuccess(data);
+      setTimeout(() => {
+        lastRef.current = '';
+        setIsScanning(true);
+      }, 2000);
+    }
+  }, [isScanning, onScanSuccess]);
 
-      if (result && isScanning) {
-        const text = result.getText();
-        if (text === lastRef.current) return;
-
-        lastRef.current = text;
-        console.log('Código QR escaneado:', text);
-        setLastScan(text);
-        setIsScanning(false);
-        setScanCount(c => c + 1);
-        onScanSuccess(text);
-
-        setTimeout(() => {
-          lastRef.current = '';
-          setIsScanning(true);
-        }, 2000);
-      }
-    },
-    [isScanning, onScanSuccess, onScanError]
-  );
+  const handleError = useCallback((err: Error) => {
+    console.error(err);
+    onScanError?.(err.message);
+  }, [onScanError]);
 
   const toggleCamera = () => {
-    setFacingMode(fm => (fm === 'user' ? 'environment' : 'user'));
+    setFacingMode(fm => fm === 'user' ? 'environment' : 'user');
   };
 
   const resetScanner = () => {
@@ -117,7 +99,6 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-gray-900">Escáner QR Activo</h3>
@@ -153,16 +134,19 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       )}
 
       <div className="aspect-square max-w-lg mx-auto relative overflow-hidden rounded-lg shadow-sm border border-gray-200">
-        <QrReader
-          onResult={handleResult}
+        <QrScanner
+          delay={300}
+          facingMode={facingMode}
+          onError={handleError}
+          onScan={handleScan}
+          style={{ width: '100%', height: '100%' }}
           constraints={{ facingMode: { ideal: facingMode } }}
-          containerStyle={{ width: '100%', height: '100%' }}
-          videoContainerStyle={{ width: '100%', height: '100%', paddingTop: 0 }}
-          videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-1/4 border-2 border-white rounded-lg shadow-lg">
-            {isScanning && <div className="absolute top-0 left-0 right-0 h-0.5 bg-green-400 animate-pulse" />}
+            {isScanning && (
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-green-400 animate-pulse" />
+            )}
           </div>
         </div>
       </div>

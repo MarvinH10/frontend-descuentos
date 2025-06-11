@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@babel/runtime": "^7.27.6",
     "@tailwindcss/vite": "^4.1.8",
     "axios": "^1.9.0",
     "cors": "^2.8.5",
@@ -19,7 +20,7 @@
     "lucide-react": "^0.514.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-qr-reader": "^3.0.0-beta-1",
+    "react-qr-scanner": "^1.0.0-alpha.11",
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
