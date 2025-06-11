@@ -119,11 +119,15 @@ export const useProductData = (): UseProductDataReturn => {
       return { price: null, rule: null };
     }
 
+    if (!state.product.rules_by_application) {
+      return { price: state.product.lst_price, rule: null };
+    }
+
     const rules = [
-      ...state.product.rules_by_application.product_variant,
-      ...state.product.rules_by_application.product_template,
-      ...state.product.rules_by_application.category,
-      ...state.product.rules_by_application.global,
+      ...(state.product.rules_by_application.product_variant || []),
+      ...(state.product.rules_by_application.product_template || []),
+      ...(state.product.rules_by_application.category || []),
+      ...(state.product.rules_by_application.global || []),
     ];
 
     const sorted = rules.sort((a, b) => b.min_quantity - a.min_quantity);

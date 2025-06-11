@@ -7,15 +7,18 @@ interface Product {
     barcode: string;
     lst_price: number;
     total_rules: number;
+    rules_by_application?: {
+        global: Rule[];
+        category: Rule[];
+        product_template: Rule[];
+        product_variant: Rule[];
+    };
 }
-
-type RuleType = 'product_variant' | 'product_template' | 'category' | 'global';
 
 interface ProductInfoProps {
     product: Product;
     quantity: number | string;
     bestPrice: number | null;
-    getRulesByType: (type: RuleType) => Rule[];
     onClearData: () => void;
     appliedRule?: { fixed_price?: number; percent_price?: number };
     loading?: boolean;
@@ -69,7 +72,6 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     product,
     quantity,
     bestPrice,
-    // getRulesByType,
     onClearData,
     appliedRule,
     loading
@@ -127,11 +129,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <span className="text-gray-600">Precio base:</span>
-                                <span className="col-span-2 font-medium">S/ {product.lst_price.toFixed(2)}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                <span className="text-gray-600">Total reglas:</span>
-                                <span className="col-span-2 font-medium">{product.total_rules}</span>
+                                <span className="col-span-2 font-medium">S/ {product.lst_price}</span>
                             </div>
                         </div>
                     </div>
@@ -144,28 +142,20 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4 relative">
                             {appliedRule && (appliedRule.fixed_price || appliedRule.percent_price) && (
                                 <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded font-semibold shadow">
-                                    {typeof appliedRule.fixed_price === 'number'
-                                        ? `Precio fijo: S/ ${appliedRule.fixed_price.toFixed(2)}`
-                                        : typeof appliedRule.percent_price === 'number'
-                                            ? `Descuento: ${appliedRule.percent_price}%`
-                                            : ''}
+                                    {appliedRule.fixed_price
+                                        ? `Precio fijo: S/ ${appliedRule.fixed_price}`
+                                        : `Descuento: ${appliedRule.percent_price}%`}
                                 </div>
                             )}
                             <div className="text-2xl font-bold text-green-800">
-                                Precio total: S/ {(
-                                    (typeof bestPrice === 'number' ? bestPrice : (typeof product.lst_price === 'number' ? product.lst_price : 0)) * Number(quantity)
-                                ).toFixed(2)}
+                                Precio total: S/ {(bestPrice != null ? bestPrice : product.lst_price) * Number(quantity)}
                             </div>
                             <div className="text-lg text-green-700 font-semibold mt-1">
-                                Precio x unidad: S/ {typeof bestPrice === 'number'
-                                    ? bestPrice.toFixed(2)
-                                    : typeof product.lst_price === 'number'
-                                        ? product.lst_price.toFixed(2)
-                                        : '0.00'}
+                                Precio x unidad: S/ {bestPrice != null ? bestPrice : product.lst_price}
                             </div>
-                            {typeof bestPrice === 'number' && bestPrice < product.lst_price && (
+                            {bestPrice != null && bestPrice < product.lst_price && (
                                 <div className="text-sm text-green-600 mt-2">
-                                    Ahorro total: S/ {((product.lst_price - bestPrice) * Number(quantity)).toFixed(2)}
+                                    Ahorro total: S/ {(product.lst_price - bestPrice) * Number(quantity)}
                                 </div>
                             )}
                         </div>

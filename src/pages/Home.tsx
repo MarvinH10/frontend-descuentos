@@ -18,7 +18,6 @@ const Home: React.FC = () => {
         error,
         searchProduct,
         getBestPrice,
-        getRulesByType,
         clearData,
         clearError
     } = useProductData();
@@ -112,7 +111,6 @@ const Home: React.FC = () => {
                         product={product}
                         quantity={Number(quantity)}
                         bestPrice={bestPrice}
-                        getRulesByType={getRulesByType}
                         onClearData={clearData}
                         appliedRule={appliedRule}
                         loading={loading}

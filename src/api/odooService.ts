@@ -61,7 +61,17 @@ class OdooService {
                 }
             );
 
-            return response.data;
+            const data = response.data;
+            if (data.success && !data.rules_by_application) {
+                data.rules_by_application = {
+                    global: [],
+                    category: [],
+                    product_template: [],
+                    product_variant: []
+                };
+            }
+
+            return data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 404) {
