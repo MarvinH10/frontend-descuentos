@@ -121,15 +121,15 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                         <div className="space-y-2 text-sm">
                             <div className="grid grid-cols-3 gap-2">
                                 <span className="text-gray-600">Nombre:</span>
-                                <span className="col-span-2 font-medium">{product.product_name}</span>
+                                <span className="col-span-2 font-medium">{product.product_name || 'N/A'}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <span className="text-gray-600">Código:</span>
-                                <span className="col-span-2 font-mono">{product.barcode}</span>
+                                <span className="col-span-2 font-mono">{product.barcode || 'N/A'}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <span className="text-gray-600">Precio base:</span>
-                                <span className="col-span-2 font-medium">S/ {product.lst_price}</span>
+                                <span className="col-span-2 font-medium">S/ {product.lst_price?.toFixed(2) || '0.00'}</span>
                             </div>
                         </div>
                     </div>
@@ -141,21 +141,21 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                         </h3>
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4 relative">
                             {appliedRule && (appliedRule.fixed_price || appliedRule.percent_price) && (
-                                <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded font-semibold shadow">
+                                <div className="absolute top-1 right-1 bg-green-600 text-white text-xs px-2 py-1 rounded font-semibold shadow">
                                     {appliedRule.fixed_price
-                                        ? `Precio fijo: S/ ${appliedRule.fixed_price}`
+                                        ? `Precio fijo: S/ ${appliedRule.fixed_price.toFixed(2)}`
                                         : `Descuento: ${appliedRule.percent_price}%`}
                                 </div>
                             )}
-                            <div className="text-2xl font-bold text-green-800">
-                                Precio total: S/ {(bestPrice != null ? bestPrice : product.lst_price) * Number(quantity)}
+                            <div className="text-2xl font-bold text-green-800 mt-4">
+                                Precio total: S/ {((bestPrice ?? product.lst_price) * Number(quantity)).toFixed(2)}
                             </div>
                             <div className="text-lg text-green-700 font-semibold mt-1">
-                                Precio x unidad: S/ {bestPrice != null ? bestPrice : product.lst_price}
+                                Precio x unidad: S/ {(bestPrice ?? product.lst_price).toFixed(2)}
                             </div>
                             {bestPrice != null && bestPrice < product.lst_price && (
                                 <div className="text-sm text-green-600 mt-2">
-                                    Ahorro total: S/ {(product.lst_price - bestPrice) * Number(quantity)}
+                                    Ahorro total: S/ {((product.lst_price - bestPrice) * Number(quantity)).toFixed(2)}
                                 </div>
                             )}
                         </div>
