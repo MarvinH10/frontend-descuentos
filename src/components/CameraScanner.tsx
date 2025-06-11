@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats, type CameraDevice } from 'html5-qrcode';
-import { Camera, CameraOff, Repeat } from 'lucide-react';
+import { Camera, CameraOff, Repeat, Lightbulb } from 'lucide-react';
 
 interface CameraScannerProps {
   onScanSuccess: (decodedText: string) => void;
@@ -156,10 +156,19 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
           <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
             <div id="qr-reader" className="w-full" />
           </div>
-          <div className="text-sm text-gray-600 text-center space-y-1">
-            <p>📱 <strong>Apunta la cámara hacia el código</strong></p>
-            <p>🔍 El escaneo es automático</p>
-            <p>📋 Soporta QR y códigos de barras</p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <Lightbulb className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-1">Consejos para un mejor escaneo:</p>
+                <ul className="text-xs space-y-1 text-blue-700 list-disc list-inside">
+                  <li>Mantén el código dentro del marco blanco</li>
+                  <li>Asegúrate de tener buena iluminación</li>
+                  <li>Mantén la cámara estable</li>
+                  <li>Si no funciona, prueba cambiar de cámara con el botón de Cambiar cámara</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </>
       )}
