@@ -10,7 +10,7 @@ const Home: React.FC = () => {
     const [barcode, setBarcode] = useState('');
     const [quantity, setQuantity] = useState<number | string>(1);
     const [bestPrice, setBestPrice] = useState<number | null>(null);
-    const [appliedRule, setAppliedRule] = useState<{ fixed_price?: number; percent_price?: number } | null>(null);
+    const [appliedRule, setAppliedRule] = useState<{ fixed_price?: number; percent_price?: number }>();
 
     const {
         product,
@@ -18,7 +18,7 @@ const Home: React.FC = () => {
         error,
         searchProduct,
         getBestPrice,
-        // getRulesByType,
+        getRulesByType,
         clearData,
         clearError
     } = useProductData();
@@ -26,34 +26,23 @@ const Home: React.FC = () => {
     const { isOnline, lastChecked } = useServerStatus();
     const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
-    const handleSearch = async (e: React.FormEvent) => {
+    const handleSearch = async (
+        e: React.FormEvent | { preventDefault: () => void },
+        customBarcode?: string
+    ): Promise<void> => {
         e.preventDefault();
-        if (!barcode.trim()) return;
+        const codeToSearch = customBarcode || barcode.trim();
+        if (!codeToSearch) return;
 
-        await searchProduct(barcode.trim());
-        addToHistory(barcode.trim());
+        await searchProduct(codeToSearch);
+        addToHistory(codeToSearch);
     };
 
     useEffect(() => {
         if (product) {
-            getBestPrice(Number(quantity)).then(price => {
+            getBestPrice(Number(quantity)).then(async ({ price, rule }) => {
                 setBestPrice(price);
-
-                const rules = [
-                    ...product.rules_by_application.product_variant,
-                    ...product.rules_by_application.product_template,
-                    ...product.rules_by_application.category,
-                    ...product.rules_by_application.global
-                ].sort((a, b) => b.min_quantity - a.min_quantity);
-
-                const rule = rules.find(r => Number(quantity) >= r.min_quantity);
-                if (rule?.compute_price === 'percentage' && rule.percent_price) {
-                    setAppliedRule({ percent_price: rule.percent_price });
-                } else if (rule?.fixed_price) {
-                    setAppliedRule({ fixed_price: rule.fixed_price });
-                } else {
-                    setAppliedRule(null);
-                }
+                setAppliedRule(rule || undefined);
             });
         }
     }, [product, quantity, getBestPrice]);
@@ -62,9 +51,9 @@ const Home: React.FC = () => {
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-6xl mx-auto px-4">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-700 mb-2 flex items-center justify-center gap-3">
-                        <Package className="w-8 h-8 text-gray-700" />
-                        Escanea tu producto
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-3">
+                        <Package className="w-8 h-8 text-gray-600" />
+                        Escanea tus productos
                     </h1>
                     <p className="text-gray-600">Busca productos por QR y consulta sus precios</p>
 
@@ -123,9 +112,10 @@ const Home: React.FC = () => {
                         product={product}
                         quantity={Number(quantity)}
                         bestPrice={bestPrice}
-                        loading={loading}
-                        appliedRule={appliedRule ?? undefined}
+                        getRulesByType={getRulesByType}
                         onClearData={clearData}
+                        appliedRule={appliedRule}
+                        loading={loading}
                     />
                 )}
             </div>

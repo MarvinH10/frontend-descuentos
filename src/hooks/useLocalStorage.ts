@@ -10,6 +10,7 @@ export function useLocalStorage<T>(
     key: string,
     initialValue: T
 ): [T, (value: SetValue<T>) => void, () => void] {
+    // Estado para almacenar el valor
     const [storedValue, setStoredValue] = useState<T>(() => {
         try {
             const item = window.localStorage.getItem(key);
@@ -20,6 +21,7 @@ export function useLocalStorage<T>(
         }
     });
 
+    // Función para actualizar el valor
     const setValue = useCallback((value: SetValue<T>) => {
         try {
             const valueToStore = value instanceof Function ? value(storedValue) : value;
@@ -30,6 +32,7 @@ export function useLocalStorage<T>(
         }
     }, [key, storedValue]);
 
+    // Función para remover el valor
     const removeValue = useCallback(() => {
         try {
             window.localStorage.removeItem(key);
@@ -39,6 +42,7 @@ export function useLocalStorage<T>(
         }
     }, [key, initialValue]);
 
+    // Escuchar cambios en localStorage desde otras pestañas
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === key && e.newValue !== null) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle, TrendingDown } from 'lucide-react';
+import type { Rule } from '../api/odooService';
 
 interface Product {
     product_name: string;
@@ -8,68 +9,70 @@ interface Product {
     total_rules: number;
 }
 
+type RuleType = 'product_variant' | 'product_template' | 'category' | 'global';
+
 interface ProductInfoProps {
     product: Product;
     quantity: number | string;
     bestPrice: number | null;
+    getRulesByType: (type: RuleType) => Rule[];
     onClearData: () => void;
-    loading: boolean;
     appliedRule?: { fixed_price?: number; percent_price?: number };
+    loading?: boolean;
 }
 
-/* Commented out for now
-const RuleCard: React.FC<{ title: string; rules: Rule[]; color: string }> = ({ title, rules, color }) => {
-    if (rules.length === 0) return null;
+// const RuleCard: React.FC<{ title: string; rules: Rule[]; color: string }> = ({ title, rules, color }) => {
+//     if (rules.length === 0) return null;
 
-    return (
-        <div className={`bg-white rounded-lg border-l-4 ${color} shadow-sm p-4`}>
-            <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <Tag className="w-4 h-4" />
-                {title} ({rules.length})
-            </h3>
-            <div className="space-y-2">
-                {rules.map((rule, index) => (
-                    <div key={rule.id || index} className="bg-gray-50 p-3 rounded border">
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                            <span className="text-gray-600">Cantidad mínima:</span>
-                            <span className="font-medium">{rule.min_quantity}</span>
+//     return (
+//         <div className={`bg-white rounded-lg border-l-4 ${color} shadow-sm p-4`}>
+//             <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+//                 <Tag className="w-4 h-4" />
+//                 {title} ({rules.length})
+//             </h3>
+//             <div className="space-y-2">
+//                 {rules.map((rule, index) => (
+//                     <div key={rule.id || index} className="bg-gray-50 p-3 rounded border">
+//                         <div className="grid grid-cols-2 gap-2 text-sm">
+//                             <span className="text-gray-600">Cantidad mínima:</span>
+//                             <span className="font-medium">{rule.min_quantity}</span>
 
-                            {rule.fixed_price && (
-                                <>
-                                    <span className="text-gray-600">Precio fijo:</span>
-                                    <span className="font-medium text-green-600">S/ {rule.fixed_price.toFixed(2)}</span>
-                                </>
-                            )}
+//                             {rule.fixed_price && (
+//                                 <>
+//                                     <span className="text-gray-600">Precio fijo:</span>
+//                                     <span className="font-medium text-green-600">S/ {rule.fixed_price.toFixed(2)}</span>
+//                                 </>
+//                             )}
 
-                            {rule.percent_price && (
-                                <>
-                                    <span className="text-gray-600">Descuento:</span>
-                                    <span className="font-medium text-blue-600">{rule.percent_price}%</span>
-                                </>
-                            )}
+//                             {rule.percent_price && (
+//                                 <>
+//                                     <span className="text-gray-600">Descuento:</span>
+//                                     <span className="font-medium text-blue-600">{rule.percent_price}%</span>
+//                                 </>
+//                             )}
 
-                            {rule.pricelist_id && (
-                                <>
-                                    <span className="text-gray-600">Lista de precios:</span>
-                                    <span className="font-medium">{rule.pricelist_id[1]}</span>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-*/
+//                             {rule.pricelist_id && (
+//                                 <>
+//                                     <span className="text-gray-600">Lista de precios:</span>
+//                                     <span className="font-medium">{rule.pricelist_id[1]}</span>
+//                                 </>
+//                             )}
+//                         </div>
+//                     </div>
+//                 ))}
+//             </div>
+//         </div>
+//     );
+// };
 
 const ProductInfo: React.FC<ProductInfoProps> = ({
     product,
     quantity,
     bestPrice,
+    // getRulesByType,
     onClearData,
-    loading,
-    appliedRule
+    appliedRule,
+    loading
 }) => {
     if (loading) {
         return (
@@ -119,12 +122,16 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                                 <span className="col-span-2 font-medium">{product.product_name}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                                <span className="text-gray-600">Código de barras:</span>
+                                <span className="text-gray-600">Código:</span>
                                 <span className="col-span-2 font-mono">{product.barcode}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                                <span className="text-gray-600">Precio real:</span>
+                                <span className="text-gray-600">Precio base:</span>
                                 <span className="col-span-2 font-medium">S/ {product.lst_price.toFixed(2)}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <span className="text-gray-600">Total reglas:</span>
+                                <span className="col-span-2 font-medium">{product.total_rules}</span>
                             </div>
                         </div>
                     </div>
@@ -158,7 +165,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                 </div>
             </div>
 
-            {/* <div className="grid lg:grid-cols-2 gap-6">
+            {/* Reglas de precios */}
+            {/*<div className="grid lg:grid-cols-2 gap-6">
                 <RuleCard
                     title="Reglas de Variante"
                     rules={getRulesByType('product_variant')}
@@ -179,14 +187,15 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                     rules={getRulesByType('global')}
                     color="border-l-green-500"
                 />
-            </div> */}
+            </div>
+            */}
 
             <div className="text-center">
                 <button
                     onClick={onClearData}
                     className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 cursor-pointer"
                 >
-                    Nueva búsqueda
+                    Nueva Búsqueda
                 </button>
             </div>
         </div>

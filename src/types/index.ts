@@ -10,7 +10,7 @@ export interface Product {
     product_tmpl_id: [number, string];
     categ_id: [number, string];
     finalPrice: number;
-    appliedRule?: { fixed_price?: number; percent_price?: number };
+    appliedRule?: PriceRule;
     appliedQty: number;
     price_rules: PriceRule[];
 }

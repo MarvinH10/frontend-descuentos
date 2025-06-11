@@ -22,7 +22,7 @@ export interface UseServerStatusReturn extends UseServerStatusState, UseServerSt
  */
 export const useServerStatus = (
     autoCheck: boolean = true,
-    intervalMs: number = 30000
+    intervalMs: number = 30000 // 30 segundos por defecto
 ): UseServerStatusReturn => {
     const [state, setState] = useState<UseServerStatusState>({
         isOnline: false,
@@ -63,6 +63,7 @@ export const useServerStatus = (
      * Inicia la verificación automática del servidor
      */
     const startAutoCheck = useCallback((customIntervalMs?: number): void => {
+        // Detener verificación previa si existe
         if (intervalId) {
             clearInterval(intervalId);
         }
@@ -81,20 +82,25 @@ export const useServerStatus = (
         }
     }, [intervalId]);
 
+    // Efecto para verificación inicial y automática
     useEffect(() => {
+        // Verificación inicial
         checkStatus();
 
+        // Iniciar verificación automática si está habilitada
         if (autoCheck) {
             startAutoCheck();
         }
 
+        // Cleanup al desmontar
         return () => {
             if (intervalId) {
                 clearInterval(intervalId);
             }
         };
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Cleanup del intervalo al cambiar
     useEffect(() => {
         return () => {
             if (intervalId) {
@@ -104,11 +110,13 @@ export const useServerStatus = (
     }, [intervalId]);
 
     return {
+        // Estado
         isOnline: state.isOnline,
         loading: state.loading,
         lastChecked: state.lastChecked,
         error: state.error,
 
+        // Acciones
         checkStatus,
         startAutoCheck,
         stopAutoCheck,

@@ -2,6 +2,11 @@ import { useState, useCallback } from 'react';
 import { odooService } from '../api/odooService';
 import type { ProductResponse, Rule, RulesByApplication } from '../api/odooService';
 
+export interface BestPriceResult {
+  price: number | null;
+  rule: Rule | null;
+}
+
 export interface UseProductDataState {
   product: ProductResponse | null;
   loading: boolean;
@@ -13,7 +18,7 @@ export interface UseProductDataActions {
   searchProduct: (barcode: string) => Promise<void>;
   searchProductByPost: (barcode: string) => Promise<void>;
   searchProductByGet: (barcode: string) => Promise<void>;
-  getBestPrice: (quantity?: number) => Promise<number | null>;
+  getBestPrice: (quantity?: number) => Promise<BestPriceResult>;
   getRulesByType: (type: keyof RulesByApplication) => Rule[];
   clearData: () => void;
   clearError: () => void;
@@ -109,23 +114,35 @@ export const useProductData = (): UseProductDataReturn => {
   /**
    * Obtiene el mejor precio para una cantidad específica
    */
-  const getBestPrice = useCallback(async (quantity: number = 1): Promise<number | null> => {
-    if (!state.lastSearchedBarcode) {
-      return null;
+  const getBestPrice = useCallback(async (quantity: number = 1): Promise<{ price: number | null; rule: Rule | null }> => {
+    if (!state.product || !state.lastSearchedBarcode) {
+      return { price: null, rule: null };
     }
 
-    try {
-      const bestPrice = await odooService.getBestPrice(state.lastSearchedBarcode, quantity);
-      return bestPrice;
-    } catch (error) {
-      console.error('Error al obtener el mejor precio:', error);
-      return null;
-    }
-  }, [state.lastSearchedBarcode]);
+    const rules = [
+      ...state.product.rules_by_application.product_variant,
+      ...state.product.rules_by_application.product_template,
+      ...state.product.rules_by_application.category,
+      ...state.product.rules_by_application.global,
+    ];
 
-  /**
-   * Obtiene reglas por tipo específico
-   */
+    const sorted = rules.sort((a, b) => b.min_quantity - a.min_quantity);
+
+    for (const rule of sorted) {
+      if (quantity >= rule.min_quantity) {
+        if (rule.fixed_price && rule.fixed_price > 0) {
+          return { price: rule.fixed_price, rule };
+        }
+        if (rule.percent_price && rule.compute_price === 'percentage') {
+          const price = state.product.lst_price * (1 - rule.percent_price / 100);
+          return { price, rule };
+        }
+      }
+    }
+
+    return { price: state.product.lst_price, rule: null };
+  }, [state.product, state.lastSearchedBarcode]);
+
   const getRulesByType = useCallback((type: keyof RulesByApplication): Rule[] => {
     if (!state.product) return [];
     return state.product.rules_by_application[type] || [];
