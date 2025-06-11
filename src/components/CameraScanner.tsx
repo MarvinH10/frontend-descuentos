@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QrReader } from 'react-qr-reader';
 import {
   Camera,
@@ -30,6 +30,7 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   const [isScanning, setIsScanning] = useState(true);
   const [lastScan, setLastScan] = useState<string>('');
   const [scanCount, setScanCount] = useState(0);
+  const lastResultRef = useRef('');
 
   useEffect(() => {
     navigator.mediaDevices
@@ -62,16 +63,17 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
 
     if (result && isScanning) {
       const scannedText = result.getText();
-      if (scannedText && scannedText !== lastScan) {
+      if (scannedText && scannedText !== lastResultRef.current) {
         console.log('Código QR escaneado:', scannedText);
         setLastScan(scannedText);
         setIsScanning(false);
         setScanCount(c => c + 1);
         onScanSuccess(scannedText);
         setTimeout(() => setIsScanning(true), 2000);
+        lastResultRef.current = scannedText;
       }
     }
-  }, [isScanning, lastScan, onScanSuccess, onScanError]);
+  }, [isScanning, onScanSuccess, onScanError]);
 
   const toggleCamera = () => {
     setFacingMode(fm => (fm === 'user' ? 'environment' : 'user'));
