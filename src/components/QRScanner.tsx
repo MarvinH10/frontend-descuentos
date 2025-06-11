@@ -193,7 +193,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
 
       {scanMode === 'manual' && (
         <form onSubmit={onSearch} className="space-y-4">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-2 md:flex-row md:gap-4">
             <div className="flex-1">
               <label htmlFor="qrcode" className="block text-sm font-medium text-gray-700 mb-2">
                 Código QR
@@ -208,7 +208,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
                 disabled={loading}
               />
             </div>
-            <div className="w-32">
+            <div className="w-full md:w-32">
               <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
                 Cantidad
               </label>
@@ -231,11 +231,11 @@ const QRScanner: React.FC<QRScannerProps> = ({
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 hover:border-gray-400 focus:border-gray-400 focus:ring-0 focus:ring-gray-400 focus:outline-none"
               />
             </div>
-            <div className="flex flex-col justify-end">
+            <div className="flex md:flex-col justify-end w-full md:w-auto">
               <button
                 type="submit"
                 disabled={loading || !barcode.trim() || !isOnline}
-                className="cursor-pointer px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full md:w-auto cursor-pointer px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2 md:mt-0"
               >
                 <Search className="w-4 h-4" />
                 {loading ? 'Buscando' : 'Buscar'}

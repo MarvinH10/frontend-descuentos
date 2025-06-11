@@ -150,7 +150,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                                 </div>
                             )}
                             <div className="text-2xl font-bold text-green-800">
-                                Precio total: S/ {((bestPrice || product.lst_price) * Number(quantity)).toFixed(2)}
+                                Precio total: S/ {(
+                                    (bestPrice != null ? bestPrice : product.lst_price != null ? product.lst_price : 0) * Number(quantity)
+                                ).toFixed(2)}
                             </div>
                             <div className="text-lg text-green-700 font-semibold mt-1">
                                 Precio x unidad: S/ {bestPrice?.toFixed(2) || product.lst_price.toFixed(2)}
