@@ -139,7 +139,7 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
             className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-2"
           >
             <Repeat className="w-4 h-4" />
-            Cambiar cámara
+            Cambiar Cámara
           </button>
         )}
       </div>
