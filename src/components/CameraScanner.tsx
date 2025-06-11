@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 import { Camera, CameraOff } from 'lucide-react';
 
 interface CameraScannerProps {
@@ -32,6 +32,10 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
           disableFlip: false,
+          facingMode: "environment",
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          showTorchButtonIfSupported: true,
+          showZoomSliderIfSupported: false
         };
 
         scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
@@ -97,8 +101,8 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
         onClick={onToggle}
         disabled={isInitializing}
         className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isActive
-            ? 'bg-red-600 hover:bg-red-700 text-white'
-            : 'bg-green-600 hover:bg-green-700 text-white'
+          ? 'bg-red-600 hover:bg-red-700 text-white'
+          : 'bg-green-600 hover:bg-green-700 text-white'
           }`}
       >
         {isInitializing ? (
