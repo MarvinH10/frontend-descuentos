@@ -5,12 +5,15 @@ import { useServerStatus } from '../hooks/useServerStatus';
 import { useSearchHistory } from '../hooks/useLocalStorage';
 import QRScanner from '../components/QRScanner';
 import ProductInfo from '../components/ProductInfo';
+import toast, { Toaster } from 'react-hot-toast';
+import type { Rule } from '../api/odooService';
 
 const Home: React.FC = () => {
     const [barcode, setBarcode] = useState('');
     const [quantity, setQuantity] = useState<number | string>(1);
     const [bestPrice, setBestPrice] = useState<number | null>(null);
     const [appliedRule, setAppliedRule] = useState<{ fixed_price?: number; percent_price?: number }>();
+    const [discountToastIds, setDiscountToastIds] = useState<string[]>([]);
 
     const {
         product,
@@ -25,11 +28,17 @@ const Home: React.FC = () => {
     const { isOnline, lastChecked } = useServerStatus();
     const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
+    const clearDiscountToasts = () => {
+        discountToastIds.forEach(id => toast.remove(id));
+        setDiscountToastIds([]);
+    };
+
     const handleSearch = async (
         e: React.FormEvent | { preventDefault: () => void },
         customBarcode?: string
     ): Promise<void> => {
         e.preventDefault();
+        clearDiscountToasts();
         const codeToSearch = customBarcode || barcode.trim();
         if (!codeToSearch) return;
 
@@ -41,15 +50,7 @@ const Home: React.FC = () => {
         const calculateBestPrice = async () => {
             if (product && quantity) {
                 try {
-                    console.log('Calculando precio para producto:', product.product_name);
-                    console.log('Cantidad:', quantity);
-                    console.log('Precio base:', product.lst_price);
-                    console.log('Reglas disponibles:', product.rules_by_application);
-
                     const result = await getBestPrice(Number(quantity));
-
-                    console.log('Resultado del cálculo:', result);
-
                     setBestPrice(result.price);
 
                     if (result.rule) {
@@ -80,6 +81,69 @@ const Home: React.FC = () => {
             setAppliedRule(undefined);
         }
     }, [product]);
+
+    useEffect(() => {
+        if (product && product.rules_by_application) {
+            const allRules = [
+                ...product.rules_by_application.product_template,
+                ...product.rules_by_application.product_variant,
+                ...product.rules_by_application.category,
+                ...product.rules_by_application.global,
+            ];
+            const futureDiscounts = allRules.filter(rule => rule.min_quantity > 1);
+
+            toast.dismiss();
+
+            if (futureDiscounts.length > 0) {
+                showDiscountToasts(futureDiscounts);
+            }
+        }
+    }, [product]);
+
+    const showDiscountToasts = (rules: Rule[]) => {
+        const ids: string[] = [];
+        rules.forEach(rule => {
+            const id = `discount-${rule.id || rule.min_quantity}-${rule.fixed_price || rule.percent_price}`;
+            ids.push(id);
+            toast.custom((t) => (
+                <div className="bg-white border border-green-400 rounded shadow p-2 flex flex-col gap-1 min-w-[180px] max-w-[240px]">
+                    <div className="text-xs flex items-center gap-1">
+                        <span role="img" aria-label="idea">💡</span>
+                        {rule.fixed_price && rule.fixed_price > 0
+                            ? <><b>Con {rule.min_quantity}</b>u. a <b>S/ {rule.fixed_price.toFixed(2)}</b></>
+                            : rule.percent_price && rule.percent_price > 0
+                                ? <><b>Con {rule.min_quantity}</b>u. <b>{rule.percent_price}% desc.</b></>
+                                : null
+                        }
+                    </div>
+                    <button
+                        className="bg-green-500 hover:bg-green-600 text-white rounded text-xs px-2 py-1 font-semibold mt-1 cursor-pointer"
+                        style={{ lineHeight: '1.1' }}
+                        onClick={() => {
+                            setQuantity(rule.min_quantity);
+                            toast.dismiss(t.id);
+                        }}
+                    >
+                        Ver x {rule.min_quantity} unidades
+                    </button>
+                    <button
+                        className="text-[10px] text-gray-500 underline self-end cursor-pointer"
+                        style={{ marginTop: '5px' }}
+                        onClick={() => toast.remove(t.id)}
+                    >
+                        Cerrar
+                    </button>
+                </div>
+            ), { id, duration: Infinity });
+        });
+        setDiscountToastIds(ids);
+    };
+
+    const handleClearAll = () => {
+        clearDiscountToasts();
+        clearData();
+        setBarcode('');
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -146,12 +210,13 @@ const Home: React.FC = () => {
                         product={product}
                         quantity={Number(quantity)}
                         bestPrice={bestPrice}
-                        onClearData={clearData}
+                        onClearData={handleClearAll}
                         appliedRule={appliedRule}
                         loading={loading}
                     />
                 )}
             </div>
+            <Toaster position="top-right" />
         </div>
     );
 };
