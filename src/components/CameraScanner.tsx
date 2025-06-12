@@ -7,13 +7,15 @@ interface CameraScannerProps {
   onScanError?: (error: string) => void;
   isActive: boolean;
   onToggle: () => void;
+  loading?: boolean;
 }
 
 const CameraScanner: React.FC<CameraScannerProps> = ({
   onScanSuccess,
   onScanError,
   isActive,
-  onToggle
+  onToggle,
+  loading = false
 }) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -199,9 +201,12 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
     getCameras();
   }, []);
 
+  const disabledAll = isInitializing || loading;
+
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
+    <div className="space-y-4 relative">
+      {disabledAll && <div className="absolute inset-0 bg-gray-100 opacity-50 z-20 cursor-not-allowed" />}
+      <div className="flex gap-2 relative z-10">
         <button
           onClick={onToggle}
           disabled={isInitializing || !currentCameraId}
