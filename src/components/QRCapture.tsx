@@ -1,17 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats, type CameraDevice } from 'html5-qrcode';
-import { Camera, CameraOff, Repeat, Lightbulb } from 'lucide-react';
+import { Camera, CameraOff, Repeat } from 'lucide-react';
 
-interface CameraScannerProps {
-  onScanSuccess: (decodedText: string) => void;
-  onScanError?: (error: string) => void;
+interface QRCaptureProps {
+  onCodeDetected: (code: string) => void;
   isActive: boolean;
   onToggle: () => void;
 }
 
-const CameraScanner: React.FC<CameraScannerProps> = ({
-  onScanSuccess,
-  onScanError,
+const QRCapture: React.FC<QRCaptureProps> = ({
+  onCodeDetected,
   isActive,
   onToggle
 }) => {
@@ -20,6 +18,11 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
   const [currentCameraId, setCurrentCameraId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  // Para evitar detecciones duplicadas
+  const lastDetectedRef = useRef<{code: string, timestamp: number}>({
+    code: '',
+    timestamp: 0
+  });
 
   const startScanner = useCallback(async () => {
     if (!currentCameraId || !isActive) return;
@@ -36,12 +39,23 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       await scannerRef.current.start(
         { deviceId: { exact: currentCameraId } },
         {
-          fps: 10,
+          fps: 5, // Reducido para mejor rendimiento
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0
         },
         (decodedText: string) => {
-          onScanSuccess(decodedText);
+          // Evitar detecciones duplicadas en un corto período de tiempo
+          const now = Date.now();
+          if (
+            decodedText !== lastDetectedRef.current.code || 
+            now - lastDetectedRef.current.timestamp > 2000 // 2 segundos entre detecciones del mismo código
+          ) {
+            lastDetectedRef.current = {
+              code: decodedText,
+              timestamp: now
+            };
+            onCodeDetected(decodedText);
+          }
         },
         (errorMsg: string) => {
           if (!errorMsg.includes("No QR code found")) {
@@ -52,16 +66,15 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
     } catch (err) {
       const msg = (err instanceof Error ? err.message : String(err)) || "No se pudo iniciar la cámara";
       setError(msg);
-      if (onScanError) onScanError(msg);
     } finally {
       setIsInitializing(false);
     }
-  }, [currentCameraId, isActive, onScanSuccess, onScanError]);
+  }, [currentCameraId, isActive, onCodeDetected]);
 
   const stopScanner = async () => {
     if (scannerRef.current && scannerRef.current.getState() === Html5QrcodeScannerState.SCANNING) {
       try {
-        scannerRef.current.stop();
+        await scannerRef.current.stop();
         scannerRef.current.clear();
         scannerRef.current = null;
       } catch (err) {
@@ -104,16 +117,43 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       });
   }, []);
 
+  const [manualCode, setManualCode] = useState('');
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualCode.trim()) {
+      onCodeDetected(manualCode.trim());
+      setManualCode('');
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <form onSubmit={handleManualSubmit} className="flex gap-2 mb-4">
+        <input
+          type="text"
+          value={manualCode}
+          onChange={(e) => setManualCode(e.target.value)}
+          placeholder="Ingresa el código manualmente"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!manualCode.trim()}
+        >
+          Buscar
+        </button>
+      </form>
       <div className="flex gap-2">
         <button
           onClick={onToggle}
           disabled={isInitializing}
-          className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isActive
-            ? 'bg-red-600 hover:bg-red-700 text-white'
-            : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
+          className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isActive
+              ? 'bg-red-600 hover:bg-red-700 text-white'
+              : 'bg-green-600 hover:bg-green-700 text-white'
+          }`}
         >
           {isInitializing ? (
             <>
@@ -152,28 +192,12 @@ const CameraScanner: React.FC<CameraScannerProps> = ({
       )}
 
       {isActive && !error && (
-        <>
-          <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
-            <div id="qr-reader" className="w-full" />
-          </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <Lightbulb className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">Consejos para un mejor escaneo:</p>
-                <ul className="text-xs space-y-1 text-blue-700 list-disc list-inside">
-                  <li>Mantén el código dentro del marco blanco</li>
-                  <li>Asegúrate de tener buena iluminación</li>
-                  <li>Mantén la cámara estable</li>
-                  <li>Si no funciona, prueba cambiar de cámara con el botón de Cambiar cámara</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </>
+        <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
+          <div id="qr-reader" className="w-full" />
+        </div>
       )}
     </div>
   );
 };
 
-export default CameraScanner;
+export default QRCapture;
