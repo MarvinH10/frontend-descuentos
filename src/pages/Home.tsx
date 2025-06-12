@@ -42,6 +42,8 @@ const Home: React.FC = () => {
         const codeToSearch = customBarcode || barcode.trim();
         if (!codeToSearch) return;
 
+        setQuantity(1);
+        
         await searchProduct(codeToSearch);
         addToHistory(codeToSearch);
     };
@@ -92,7 +94,7 @@ const Home: React.FC = () => {
             ];
             const futureDiscounts = allRules.filter(rule => rule.min_quantity > 1);
 
-            toast.dismiss();
+            toast.remove();
 
             if (futureDiscounts.length > 0) {
                 showDiscountToasts(futureDiscounts);
@@ -121,7 +123,7 @@ const Home: React.FC = () => {
                         style={{ lineHeight: '1.1' }}
                         onClick={() => {
                             setQuantity(rule.min_quantity);
-                            toast.dismiss(t.id);
+                            toast.remove(t.id);
                         }}
                     >
                         Ver x {rule.min_quantity} unidades
