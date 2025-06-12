@@ -112,9 +112,39 @@ export const useProductData = (): UseProductDataReturn => {
   }, []);
 
   /**
-   * Obtiene el mejor precio para una cantidad específica
+   * Helper para encontrar la mejor regla en un array de reglas
    */
-  const getBestPrice = useCallback(async (quantity: number = 1): Promise<{ price: number | null; rule: Rule | null }> => {
+  const findBestRuleInArray = useCallback((rules: Rule[], quantity: number): { price: number | null; rule: Rule | null } => {
+    if (!rules || rules.length === 0) {
+      return { price: null, rule: null };
+    }
+
+    // Ordenar por min_quantity descendente para obtener la mejor regla aplicable
+    const sortedRules = rules.sort((a, b) => b.min_quantity - a.min_quantity);
+
+    for (const rule of sortedRules) {
+      if (quantity >= rule.min_quantity) {
+        if (rule.fixed_price && rule.fixed_price > 0) {
+          return { price: rule.fixed_price, rule };
+        }
+        if (rule.percent_price && rule.compute_price === 'percentage') {
+          const price = state.product!.lst_price * (1 - rule.percent_price / 100);
+          return { price, rule };
+        }
+      }
+    }
+
+    return { price: null, rule: null };
+  }, [state.product]);
+
+  /**
+   * Obtiene el mejor precio para una cantidad específica siguiendo la jerarquía:
+   * 1. product_template
+   * 2. product_variant
+   * 3. category
+   * 4. global
+   */
+  const getBestPrice = useCallback(async (quantity: number = 1): Promise<BestPriceResult> => {
     if (!state.product || !state.lastSearchedBarcode) {
       return { price: null, rule: null };
     }
@@ -123,29 +153,30 @@ export const useProductData = (): UseProductDataReturn => {
       return { price: state.product.lst_price, rule: null };
     }
 
-    const rules = [
-      ...(state.product.rules_by_application.product_variant || []),
-      ...(state.product.rules_by_application.product_template || []),
-      ...(state.product.rules_by_application.category || []),
-      ...(state.product.rules_by_application.global || []),
+    const { rules_by_application } = state.product;
+
+    // Jerarquía de búsqueda
+    const hierarchy: (keyof RulesByApplication)[] = [
+      'product_template',
+      'product_variant',
+      'category',
+      'global'
     ];
 
-    const sorted = rules.sort((a, b) => b.min_quantity - a.min_quantity);
-
-    for (const rule of sorted) {
-      if (quantity >= rule.min_quantity) {
-        if (rule.fixed_price && rule.fixed_price > 0) {
-          return { price: rule.fixed_price, rule };
-        }
-        if (rule.percent_price && rule.compute_price === 'percentage') {
-          const price = state.product.lst_price * (1 - rule.percent_price / 100);
-          return { price, rule };
+    // Buscar en cada nivel de la jerarquía
+    for (const ruleType of hierarchy) {
+      const rules = rules_by_application[ruleType];
+      if (rules && rules.length > 0) {
+        const result = findBestRuleInArray(rules, quantity);
+        if (result.price !== null && result.rule !== null) {
+          return result;
         }
       }
     }
 
+    // Si no se encuentra ninguna regla aplicable, retornar el precio base
     return { price: state.product.lst_price, rule: null };
-  }, [state.product, state.lastSearchedBarcode]);
+  }, [state.product, state.lastSearchedBarcode, findBestRuleInArray]);
 
   const getRulesByType = useCallback((type: keyof RulesByApplication): Rule[] => {
     if (!state.product) return [];
