@@ -127,7 +127,7 @@ const QRCapture: React.FC<QRCaptureProps> = ({
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleManualSubmit} className="flex gap-2 mb-4">
+      <form onSubmit={handleManualSubmit} className="flex flex-col sm:flex-row gap-2 mb-4">
         <input
           type="text"
           value={manualCode}
@@ -137,7 +137,7 @@ const QRCapture: React.FC<QRCaptureProps> = ({
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
           disabled={!manualCode.trim()}
         >
           <Search className="inline w-4 h-4" />
@@ -149,8 +149,8 @@ const QRCapture: React.FC<QRCaptureProps> = ({
           onClick={onToggle}
           disabled={isInitializing}
           className={`cursor-pointer flex-1 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 ${isActive
-              ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+            ? 'bg-red-600 hover:bg-red-700 text-white'
+            : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
         >
           {isInitializing ? (
