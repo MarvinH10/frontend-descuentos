@@ -127,7 +127,7 @@ export const useProductData = (): UseProductDataReturn => {
         if (rule.fixed_price && rule.fixed_price > 0) {
           return { price: rule.fixed_price, rule };
         }
-        if (rule.percent_price && rule.compute_price === 'percentage') {
+        if (rule.percent_price !== undefined && rule.compute_price === 'percentage') {
           const price = state.product!.lst_price * (1 - rule.percent_price / 100);
           return { price, rule };
         }
