@@ -140,11 +140,13 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                             Mejor precio (Cantidad: {quantity})
                         </h3>
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4 relative">
-                            {appliedRule && (appliedRule.fixed_price || appliedRule.percent_price) && (
+                            {appliedRule && (
                                 <div className="absolute top-1 right-1 bg-green-600 text-white text-xs px-2 py-1 rounded font-semibold shadow">
-                                    {appliedRule.fixed_price
+                                    {appliedRule.fixed_price !== undefined && appliedRule.fixed_price > 0
                                         ? `Precio fijo: S/ ${appliedRule.fixed_price.toFixed(2)}`
-                                        : `Descuento: ${appliedRule.percent_price}%`}
+                                        : appliedRule.percent_price !== undefined && appliedRule.percent_price > 0
+                                          ? `Descuento: ${appliedRule.percent_price}%`
+                                          : 'No aplica descuentos'}
                                 </div>
                             )}
                             <div className="text-2xl font-bold text-green-800 mt-4">
