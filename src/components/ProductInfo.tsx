@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, TrendingDown } from 'lucide-react';
+import { CheckCircle, TrendingDown, Search } from 'lucide-react';
 import type { Rule } from '../api/odooService';
 
 interface Product {
@@ -145,8 +145,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                                     {appliedRule.fixed_price !== undefined && appliedRule.fixed_price > 0
                                         ? `Precio fijo: S/ ${appliedRule.fixed_price.toFixed(2)}`
                                         : appliedRule.percent_price !== undefined && appliedRule.percent_price > 0
-                                          ? `Descuento: ${appliedRule.percent_price}%`
-                                          : 'No aplica descuentos'}
+                                            ? `Descuento: ${appliedRule.percent_price}%`
+                                            : 'No aplica descuentos'}
                                 </div>
                             )}
                             <div className="text-2xl font-bold text-green-800 mt-4">
@@ -190,11 +190,12 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             </div>
             */}
 
-            <div className="text-center">
+            <div className="flex justify-center items-center mt-4">
                 <button
                     onClick={onClearData}
-                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 cursor-pointer"
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 cursor-pointer flex items-center justify-center gap-1"
                 >
+                    <Search className="w-4 h-4" />
                     Nueva Búsqueda
                 </button>
             </div>
