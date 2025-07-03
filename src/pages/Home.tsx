@@ -125,16 +125,19 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0097D4' }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "#0097D4" }}
+    >
       {/* Header */}
       <header className="py-4">
         <div className="max-w-6xl mx-auto px-4 text-center mb-4">
-            <img
-                src={Logo}
-                alt="Logo"
-                className="mx-auto mb-4"
-                style={{ width: "150px", height: "auto" }}
-            />
+          <img
+            src={Logo}
+            alt="Logo"
+            className="mx-auto mb-4"
+            style={{ width: "150px", height: "auto" }}
+          />
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
             <span className="ml-2">DESCUBRE TU DESCUENTO</span>
           </h1>
@@ -156,7 +159,10 @@ const Home: React.FC = () => {
         <Toaster position="top-right" />
         <div className="max-w-6xl w-full px-4 flex flex-col items-center justify-center">
           <div className="mb-8 w-full flex flex-col items-center justify-center">
-            <div className="bg-transparent rounded-lg p-6 max-w-md w-full mx-auto" style={{ boxShadow: 'none', border: 'none' }}>
+            <div
+              className="bg-transparent rounded-lg p-6 max-w-md w-full mx-auto"
+              style={{ boxShadow: "none", border: "none" }}
+            >
               <div className="my-4 text-center font-bold text-lg">
                 {isOnline ? (
                   <div className="text-green-600">
@@ -167,7 +173,6 @@ const Home: React.FC = () => {
                   <p className="text-red-600">SISTEMA INACTIVO</p>
                 )}
               </div>
-              <h2 className="text-lg font-medium mb-4 text-center">Escáner QR</h2>
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-500 mb-4"></div>
