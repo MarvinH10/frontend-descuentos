@@ -63,7 +63,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
   return (
     <>
-      <div className="bg-transparent p-6 text-center space-y-2" style={{ boxShadow: 'none', border: 'none' }}>
+      <div className="bg-transparent p-6 text-center space-y-2" style={{ boxShadow: 'none', border: 'none', marginTop: '-3.5rem' }}>
         {/* Nombre del producto */}
         <div className="text-lg font-medium" style={{ color: '#0097D4' }}>
           {product.product_name || "N/A"}
@@ -75,12 +75,12 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         </div>
 
         {/* Texto de descuento */}
-        <div className="text-green-600 border border-green-600 rounded px-2 py-1 inline-block text-sm">
+        <div className="text-white bg-green-600 rounded px-3 py-1 inline-block text-lg">
           DESCT. {appliedRule?.percent_price?.toFixed(0) || 0}%
         </div>
 
         {/* Precio con descuento */}
-        <div className="font-bold" style={{ color: '#0097D4', fontSize: '3rem' }}>
+        <div className="font-bold" style={{ color: '#0097D4', fontSize: '3.5rem' }}>
           S/ {((bestPrice ?? product.lst_price) * Number(quantity)).toFixed(2)}
         </div>
       </div>

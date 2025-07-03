@@ -190,19 +190,19 @@ const Home: React.FC = () => {
                 <div
                   onClick={handleClearAll}
                   className={`
-                  flex items-center justify-center mx-auto
-                  bg-sky-400
-                  transition-colors
-                  w-32 h-32
-                  my-4
-                  select-none
-                  relative
-                `}
+                    flex items-center justify-center mx-auto
+                    bg-sky-400
+                    transition-colors
+                    w-24 h-24 /* Reduced size */
+                    my-4
+                    select-none
+                    relative
+                  `}
                 >
                   {/* Cuadrado intermedio blanco */}
-                  <div className="absolute left-1/2 top-1/2 z-10 h-[94px] w-[94px] -translate-x-1/2 -translate-y-1/2 bg-white" />
+                  <div className="absolute left-1/2 top-1/2 z-10 h-[64px] w-[64px] -translate-x-1/2 -translate-y-1/2 bg-white" />
                   {/* Cuadrado pequeño del mismo color */}
-                  <div className="absolute left-1/2 top-1/2 z-20 h-[52px] w-[52px] -translate-x-1/2 -translate-y-1/2 bg-sky-400" />
+                  <div className="absolute left-1/2 top-1/2 z-20 h-[32px] w-[32px] -translate-x-1/2 -translate-y-1/2 bg-sky-400" />
                 </div>
               )}
             </div>
