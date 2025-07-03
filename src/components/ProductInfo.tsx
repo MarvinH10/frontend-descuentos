@@ -108,38 +108,24 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     }
 
     return (
-        <div className="space-y-6">
+        <>
             <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                    <h2 className="text-xl font-bold text-gray-900">Producto encontrado!</h2>
-                </div>
+              
 
                 <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                        <h3 className="font-semibold text-gray-800 mb-2">Información del producto</h3>
                         <div className="space-y-2 text-sm">
                             <div className="grid grid-cols-3 gap-2">
-                                <span className="text-gray-600">Nombre:</span>
                                 <span className="col-span-2 font-medium">{product.product_name || 'N/A'}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                                <span className="text-gray-600">Código:</span>
-                                <span className="col-span-2 font-mono">{product.barcode || 'N/A'}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                <span className="text-gray-600">Precio base:</span>
                                 <span className="col-span-2 font-medium">S/ {product.lst_price?.toFixed(2) || '0.00'}</span>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                            <TrendingDown className="w-4 h-4 text-green-600" />
-                            Mejor precio (Cantidad: {quantity})
-                        </h3>
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 relative">
+                        <div className="bg-green-50 rounded-lg p-4 relative">
                             {appliedRule && (
                                 <div className="absolute top-1 right-1 bg-green-600 text-white text-xs px-2 py-1 rounded font-semibold shadow">
                                     {appliedRule.fixed_price !== undefined && appliedRule.fixed_price > 0
@@ -150,7 +136,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                                 </div>
                             )}
                             <div className="text-2xl font-bold text-green-800 mt-4">
-                                Precio total: S/ {((bestPrice ?? product.lst_price) * Number(quantity)).toFixed(2)}
+                                 S/ {((bestPrice ?? product.lst_price) * Number(quantity)).toFixed(2)}
                             </div>
                             <div className="text-lg text-green-700 font-semibold mt-1">
                                 Precio x unidad: S/ {(bestPrice ?? product.lst_price).toFixed(2)}
@@ -190,16 +176,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             </div>
             */}
 
-            <div className="flex justify-center items-center mt-4">
-                <button
-                    onClick={onClearData}
-                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 cursor-pointer flex items-center justify-center gap-1"
-                >
-                    <Search className="w-4 h-4" />
-                    Nueva Búsqueda
-                </button>
-            </div>
-        </div>
+        </>
     );
 };
 
