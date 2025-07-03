@@ -142,11 +142,12 @@ const Home: React.FC = () => {
 
       {/* Contenido principal */}
       <main
-        className="flex-1 flex items-center justify-center min-h-0"
+        className="flex-1 flex items-center justify-center"
         style={{
           backgroundImage: `url(${Cuadrado})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
+          minHeight: "calc(100vh - 200px)",
         }}
       >
         <Toaster position="top-right" />
