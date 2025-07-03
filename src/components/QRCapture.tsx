@@ -79,7 +79,7 @@ const QRCapture: React.FC<QRCaptureProps> = ({
     }
   }, [currentCameraId, isActive, onCodeDetected]);
 
-  const stopScanner = async () => {
+  const stopScanner = useCallback(async () => {
     if (
       scannerRef.current &&
       scannerRef.current.getState() === Html5QrcodeScannerState.SCANNING
@@ -92,19 +92,17 @@ const QRCapture: React.FC<QRCaptureProps> = ({
         console.warn("⚠️ Error al detener el escáner:", err);
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isActive) {
       startScanner();
-    } else {
-      stopScanner();
     }
 
     return () => {
       stopScanner();
     };
-  }, [isActive, currentCameraId, startScanner]);
+  }, [isActive, startScanner, stopScanner]);
 
   const toggleCamera = () => {
     if (cameras.length < 2) return;
@@ -142,88 +140,7 @@ const QRCapture: React.FC<QRCaptureProps> = ({
 
   return (
     <div className="space-y-4">
-      <div
-        onClick={!isInitializing ? onToggle : undefined}
-        className={`
-              flex items-center justify-center mx-auto
-              ${isActive ? "bg-red-600" : "bg-sky-400"}
-              ${
-                isInitializing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
-              }
-              transition-colors
-              w-32 h-32
-              mb-4
-              select-none
-              relative
-            `}
-        style={{ minWidth: 128, minHeight: 128 }}
-      >
-        {/* Cuadrado intermedio blanco */}
-        <div
-          className="absolute"
-          style={{
-            width: 94,
-            height: 94,
-            background: "white",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 1,
-          }}
-        />
-        {/* Cuadrado pequeño del mismo color */}
-        <div
-          className="absolute"
-          style={{
-            width: 52,
-            height: 52,
-            background: isActive ? "#dc2626" : "#38bdf8", // sky-400 o red-600
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 2,
-          }}
-        />
-      </div>
-
-      {isActive && !error && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
-          <div id="qr-reader" className="w-full" />
-        </div>
-      )}
-      <form
-        onSubmit={handleManualSubmit}
-        className="flex flex-col sm:flex-row gap-2 mb-4"
-      >
-        <input
-          type="text"
-          value={manualCode}
-          onChange={(e) => setManualCode(e.target.value)}
-          placeholder="Ingresa el código manualmente"
-          className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:border-gray-400 focus:border-gray-400 focus:ring-0 focus:ring-gray-400 focus:outline-none"
-        />
-        <button
-          type="submit"
-          className="w-full sm:w-auto px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
-          disabled={!manualCode.trim()}
-        >
-          <Search className="inline w-4 h-4" />
-          Buscar
-        </button>
-      </form>
-      <div className="flex gap-2">
-        {isActive && cameras.length > 1 && (
-          <button
-            onClick={toggleCamera}
-            className="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white flex items-center justify-center gap-2"
-          >
-            <Repeat className="w-4 h-4" />
-            Cambiar Cámara
-          </button>
-        )}
-      </div>
+     
 
       {error && (
         <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
@@ -231,7 +148,88 @@ const QRCapture: React.FC<QRCaptureProps> = ({
           <p className="text-sm">{error}</p>
         </div>
       )}
+
+      {/* Botón para abrir la cámara (celeste) */}
+      {!isActive && (
+        <div
+          onClick={!isInitializing ? onToggle : undefined}
+          className={`
+            flex items-center justify-center mx-auto
+            bg-sky-400
+            ${
+              isInitializing
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }
+            transition-colors
+            w-32 h-32
+            my-4
+            select-none
+            relative
+          `}
+        >
+          {/* Cuadrado intermedio blanco */}
+          <div className="absolute left-1/2 top-1/2 z-10 h-[94px] w-[94px] -translate-x-1/2 -translate-y-1/2 bg-white" />
+          {/* Cuadrado pequeño del mismo color */}
+          <div className="absolute left-1/2 top-1/2 z-20 h-[52px] w-[52px] -translate-x-1/2 -translate-y-1/2 bg-sky-400" />
+        </div>
+      )}
+
+      {/* Visor de la cámara y botones de control (cuando está activa) */}
+      {isActive && !error && (
+        <>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+            <div id="qr-reader" className="w-full" />
+          </div>
+
+          <div className="flex gap-2 mt-2">
+            {/* Botón para voltear la cámara (cuadrado, celeste) */}
+            {cameras.length > 1 && (
+              <button
+                onClick={toggleCamera}
+                disabled={isInitializing}
+                className="h-12 w-12 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 bg-sky-400 hover:bg-sky-500 text-white"
+                aria-label="Cambiar cámara"
+              >
+                <Repeat className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Botón para cerrar la cámara (verde) */}
+            <button
+              onClick={onToggle}
+              disabled={isInitializing}
+              className="flex-1 h-12 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 bg-green-600 hover:bg-green-700 text-white"
+            >
+              <CameraOff className="w-4 h-4" />
+              Cerrar Cámara
+            </button>
+          </div>
+        </>
+      )}
+      {/* Formulario de entrada manual */}
+      <form
+        onSubmit={handleManualSubmit}
+        className="flex gap-2"
+      >
+        <input
+          type="text"
+          value={manualCode}
+          onChange={(e) => setManualCode(e.target.value)}
+          placeholder="Ingresa el código manualmente"
+          className="flex-1 h-12 px-4 rounded-lg border border-gray-300 hover:border-gray-400 focus:border-gray-400 focus:ring-0 focus:ring-gray-400 focus:outline-none"
+        />
+        <button
+          type="submit"
+          className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-lg bg-[#0097D4] hover:bg-[#0086BF] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!manualCode.trim()}
+          aria-label="Buscar código"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+      </form>
     </div>
+    
   );
 };
 
