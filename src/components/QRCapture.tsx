@@ -5,7 +5,7 @@ import {
   Html5QrcodeSupportedFormats,
   type CameraDevice,
 } from "html5-qrcode";
-import { Camera, CameraOff, Repeat, Search } from "lucide-react";
+import { CameraOff, Repeat, Search } from "lucide-react";
 
 interface QRCaptureProps {
   onCodeDetected: (code: string) => void;

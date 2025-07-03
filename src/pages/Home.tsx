@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Package,
   AlertCircle,
-  Wifi,
-  WifiOff,
-  Clock,
-  Camera,
 } from "lucide-react";
 import { useProductData } from "../hooks/useProductData";
 import { useServerStatus } from "../hooks/useServerStatus";
@@ -36,7 +31,7 @@ const Home: React.FC = () => {
     clearError,
   } = useProductData();
 
-  const { isOnline, lastChecked } = useServerStatus();
+  const { isOnline } = useServerStatus();
   const { addToHistory } = useSearchHistory();
 
   const handleCodeDetected = useCallback(
