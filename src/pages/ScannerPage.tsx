@@ -192,7 +192,7 @@ const ScannerPage: React.FC = () => {
           </div>
         )}
 
-        {product && (
+        {product ? (
           <ProductInfo
             product={product}
             quantity={quantity}
@@ -201,6 +201,8 @@ const ScannerPage: React.FC = () => {
             appliedRule={appliedRule}
             loading={loading}
           />
+        ) : (
+            <div className='h-20'></div>
         )}
       </div>
     </div>
