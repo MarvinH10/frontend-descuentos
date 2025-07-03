@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  AlertCircle,
-} from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useProductData } from "../hooks/useProductData";
 import { useServerStatus } from "../hooks/useServerStatus";
 import { useSearchHistory } from "../hooks/useLocalStorage";
@@ -133,10 +131,10 @@ const Home: React.FC = () => {
             className="mx-auto mb-4"
             style={{ width: "150px", height: "auto" }}
           />
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center">
+          <h1 className="text-[25px] font-semibold text-white mb-2 flex items-center justify-center">
             <span className="ml-2">DESCUBRE TU DESCUENTO</span>
           </h1>
-          <p className="text-gray-200">
+          <p className="text-white mx-16 font-semibold">
             Escanea el código QR del producto y mira cuánto ahorras.
           </p>
         </div>
@@ -187,17 +185,18 @@ const Home: React.FC = () => {
                   className={`
                     flex items-center justify-center mx-auto
                     bg-sky-400
+                    }
                     transition-colors
-                    w-24 h-24 /* Reduced size */
+                    w-20 h-20
                     my-4
                     select-none
                     relative
                   `}
                 >
                   {/* Cuadrado intermedio blanco */}
-                  <div className="absolute left-1/2 top-1/2 z-10 h-[64px] w-[64px] -translate-x-1/2 -translate-y-1/2 bg-white" />
+                  <div className="absolute left-1/2 top-1/2 z-10 h-[60px] w-[60px] -translate-x-1/2 -translate-y-1/2 bg-white" />
                   {/* Cuadrado pequeño del mismo color */}
-                  <div className="absolute left-1/2 top-1/2 z-20 h-[32px] w-[32px] -translate-x-1/2 -translate-y-1/2 bg-sky-400" />
+                  <div className="absolute left-1/2 top-1/2 z-20 h-[40px] w-[40px] -translate-x-1/2 -translate-y-1/2 bg-sky-400" />
                 </div>
               )}
             </div>
@@ -232,8 +231,27 @@ const Home: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer vacío */}
-      <footer className="py-4"></footer>
+      {/* Footer */}
+      <footer className="py-4 text-center">
+        <div className="max-w-6xl mx-auto px-[22px] align-center">
+          <p className="text-white text-sm leading-relaxed font-semibold">
+            © 2025 KDOSH STORE S.A.C.
+            <br />
+            Todos los derechos reservados. Esta plataforma es una herramienta
+            informativa para uso exclusivo de tiendas fisicas KDOSH. Los precios
+            y descuentos mostrados están sujetos a disponibilidad de stock y
+            pueden variar sin previo aviso. El escaneo de productos no
+            constituye una reserva ni garantiza la compra del artículo. KDOSH
+            STORE S.A.C. no se responzabiliza por errores de visualización
+            ocasionados por fallas de conexión o problemas técnicos. Al usar
+            esta herramienta, aceptas los términos y condiciones de uso
+            establecidos por la empresa.
+            <br />
+            <br />
+            <span className="text-xl font-normal">MCMLXXXIX</span>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
